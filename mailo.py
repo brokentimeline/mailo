@@ -120,7 +120,6 @@ def print_help() -> None:
 {color('│  ➤ 4  | Auto-refresh (10s)                    │', fg='green')}
 {color('│  ➤ 5  | Copy address to clipboard             │', fg='green')}
 {color('│  ➤ 6  | Help                                  │', fg='green')}
-{color('│  ➤ d  | Debug API (raw response)              │', fg='yellow')}
 {color('│  ➤ 99 | Exit                                  │', fg='green')}
 {color('└─────────────────────────────────────────────────┘', fg='blue')}
 """
@@ -276,22 +275,6 @@ class MailoSession:
         except Exception as e:
             print(color(f"Failed to copy: {e}", fg="red"))
 
-    def debug_api(self) -> None:
-        if not self.is_active():
-            print(color("No active session.", fg="red"))
-            return
-        params = {"action": "get_email_list", "sid_token": self.sid, "offset": "0"}
-        url = f"{API_BASE}?{urllib.parse.urlencode(params)}"
-        print(color(f"\n→ Debug: Fetching {url}", fg="cyan"))
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                data = resp.read().decode("utf-8")
-                print(color("→ Raw JSON response:", fg="yellow"))
-                print(json.dumps(json.loads(data), indent=2))
-        except Exception as e:
-            print(color(f"Debug error: {e}", fg="red"))
-
 def main():
     clear_screen()
     print_banner()
@@ -336,8 +319,6 @@ def main():
             session.copy_address()
         elif choice == "6":
             print_help()
-        elif choice == "d":
-            session.debug_api()
         elif choice in ["99", "q", "quit", "exit"]:
             print(color("Goodbye!", fg="yellow"))
             break
