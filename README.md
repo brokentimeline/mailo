@@ -15,7 +15,8 @@ Made by [@govsmail](https://t.me/govsmail) on Telegram.
 - Read full email content (plain text and HTML converted)
 - Auto-refresh inbox every few seconds
 - Copy email address to clipboard (optional)
-- Debug mode to inspect raw API responses
+- Show inbox summary (total messages / new messages)
+- Automatic screen clearing before each operation
 - Works on Linux, Windows (Python), Termux (Android), and iSH (iOS)
 
 ## Requirements
@@ -178,34 +179,35 @@ python mailo.py
 
 ## Usage
 
-After starting Mailo, you will see a modern banner and an arrow‑style menu:
+After starting Mailo, you will see a banner and a menu:
 
 ```
 
-┌─────────────────────────────────────────────────┐
-│                    MAILO                       │
-├─────────────────────────────────────────────────┤
-│  ➤ 1  | New email address                     │
-│  ➤ 2  | View inbox                            │
-│  ➤ 3  | Read email (by number)                │
-│  ➤ 4  | Auto-refresh (10s)                    │
-│  ➤ 5  | Copy address to clipboard             │
-│  ➤ 6  | Help                                  │
-│  ➤ 99 | Exit                                  │
-└─────────────────────────────────────────────────┘
+╔════════════════════════════════════════════════════════════════╗
+║                         M A I L O   M E N U                     ║
+╠════════════════════════════════════════════════════════════════╣
+║  ➤  1   |  Generate a new temporary email address             ║
+║  ➤  2   |  View inbox (full list)                             ║
+║  ➤  3   |  Read an email (by number)                          ║
+║  ➤  4   |  Auto-refresh inbox (every 10 seconds)              ║
+║  ➤  5   |  Copy current address to clipboard                  ║
+║  ➤  6   |  Show inbox summary (total / new)                   ║
+║  ➤  99  |  Exit                                               ║
+╚════════════════════════════════════════════════════════════════╝
 
 ```
 
-Type the number or letter and press Enter.
+Type the number and press Enter.
 
 - **1** – Generates a new temporary email address. The old address will no longer work.
 - **2** – Shows the inbox with a list of received emails (ID, sender, subject, date).
 - **3** – Reads an email. You will be asked to enter the number from the inbox list.
 - **4** – Automatically refreshes the inbox every 10 seconds. Press Ctrl+C to stop.
 - **5** – Copies the current email address to your clipboard (requires `pyperclip`).
-- **6** – Displays the help menu again.
-- **d** – Debug mode: prints the raw JSON response from the API. Useful to see if emails are arriving when the inbox appears empty.
+- **6** – Shows a summary: total messages in the inbox and how many are new since last check.
 - **99** – Exits the program.
+
+The screen is automatically cleared before showing the inbox, email content, or summary, keeping the interface clean.
 
 ## Troubleshooting
 
@@ -220,7 +222,7 @@ Install CA certificates:
 
 ### Inbox stays empty even after sending an email
 - Wait 5–10 seconds – email delivery is not instant.
-- Use the **debug command** (`d`) to see the raw API response. If the response shows `"list": []`, the email may have been blocked or the address is invalid. Try generating a new address (option 1) and send the email again.
+- Try generating a new address (option 1) and send the email again.
 - Some services block disposable email domains – try a different recipient service.
 
 ### Clipboard not working
