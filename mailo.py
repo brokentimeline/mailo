@@ -24,12 +24,6 @@ class Style:
     MAGENTA = "\033[35m"
     CYAN = "\033[36m"
     WHITE = "\033[37m"
-    BG_RED = "\033[41m"
-    BG_GREEN = "\033[42m"
-    BG_YELLOW = "\033[43m"
-    BG_BLUE = "\033[44m"
-    BG_MAGENTA = "\033[45m"
-    BG_CYAN = "\033[46m"
 
 def color(text: str, fg: str = "", bold: bool = False, dim: bool = False) -> str:
     codes = []
@@ -44,10 +38,9 @@ def color(text: str, fg: str = "", bold: bool = False, dim: bool = False) -> str
     return "".join(codes)
 
 API_BASE = "https://api.guerrillamail.com/ajax.php"
-USER_AGENT = "mailo-terminal/1.0"
+USER_AGENT = "mailo-terminal/2.0"
 
 def api_request(params: Dict[str, str]) -> Optional[Any]:
-    # Guerrilla Mail expects 'f' as the action parameter
     if "action" in params:
         params["f"] = params.pop("action")
     url = f"{API_BASE}?{urllib.parse.urlencode(params)}"
@@ -101,40 +94,41 @@ def clear_screen() -> None:
 
 def print_banner() -> None:
     banner = r"""
-╔════════════════════════════════════════════════════════╗
-║  ███╗   ███╗ █████╗ ██╗██╗      ██████╗               ║
-║  ████╗ ████║██╔══██╗██║██║     ██╔═══██╗              ║
-║  ██╔████╔██║███████║██║██║     ██║   ██║              ║
-║  ██║╚██╔╝██║██╔══██║██║██║     ██║   ██║              ║
-║  ██║ ╚═╝ ██║██║  ██║██║███████╗╚██████╔╝              ║
-║  ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝╚══════╝ ╚═════╝               ║
-║         Temporary Email Client for Terminal           ║
-║              Powered by Guerrilla Mail                ║
-║           made by @govsmail on Telegram               ║
-╚════════════════════════════════════════════════════════╝
+╔═══════════════════════════════════════════════════════════════╗
+║   ███╗   ███╗ █████╗ ██╗██╗      ██████╗                     ║
+║   ████╗ ████║██╔══██╗██║██║     ██╔═══██╗                    ║
+║   ██╔████╔██║███████║██║██║     ██║   ██║                    ║
+║   ██║╚██╔╝██║██╔══██║██║██║     ██║   ██║                    ║
+║   ██║ ╚═╝ ██║██║  ██║██║███████╗╚██████╔╝                    ║
+║   ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝╚══════╝ ╚═════╝                     ║
+║                                                               ║
+║           Temporary Email Client for Terminal                ║
+║                 Powered by Guerrilla Mail                    ║
+║              made by @govsmail on Telegram                   ║
+╚═══════════════════════════════════════════════════════════════╝
 """
-    print(color(banner, fg="magenta"))
+    print(color(banner, fg="magenta", bold=True))
 
 def print_help() -> None:
     help_text = f"""
-{color('┌─────────────────────────────────────────────────┐', fg='cyan')}
-{color('│                 MAILO COMMANDS                  │', fg='cyan', bold=True)}
-{color('├─────────────────────────────────────────────────┤', fg='cyan')}
-{color('│  1) New email address                          │', fg='green')}
-{color('│  2) View inbox                                 │', fg='green')}
-{color('│  3) Read email (by number)                     │', fg='green')}
-{color('│  4) Auto-refresh (10s)                         │', fg='green')}
-{color('│  5) Copy address to clipboard                  │', fg='green')}
-{color('│  6) Help                                       │', fg='green')}
-{color('│  d) Debug (show raw API response)              │', fg='yellow')}
-{color('│ 99) Exit                                       │', fg='green')}
-{color('└─────────────────────────────────────────────────┘', fg='cyan')}
+{color('┌─────────────────────────────────────────────────┐', fg='blue')}
+{color('│                    MAILO                       │', fg='blue', bold=True)}
+{color('├─────────────────────────────────────────────────┤', fg='blue')}
+{color('│  ➤ 1  | New email address                     │', fg='green')}
+{color('│  ➤ 2  | View inbox                            │', fg='green')}
+{color('│  ➤ 3  | Read email (by number)                │', fg='green')}
+{color('│  ➤ 4  | Auto-refresh (10s)                    │', fg='green')}
+{color('│  ➤ 5  | Copy address to clipboard             │', fg='green')}
+{color('│  ➤ 6  | Help                                  │', fg='green')}
+{color('│  ➤ d  | Debug API (raw response)              │', fg='yellow')}
+{color('│  ➤ 99 | Exit                                  │', fg='green')}
+{color('└─────────────────────────────────────────────────┘', fg='blue')}
 """
     print(help_text)
 
 def print_inbox_table(messages: List[Dict]) -> None:
     if not messages:
-        print(color("\nInbox is empty. Waiting for emails...", fg="yellow"))
+        print(color("\n📭 Inbox is empty. Waiting for emails...", fg="yellow"))
         return
 
     rows = []
@@ -205,8 +199,7 @@ class MailoSession:
         if result:
             self.login, self.domain, self.address, self.sid = result
             self.messages = []
-            print(color(f"\nNew temporary email: {self.address}", fg="green"))
-            # Wait a moment for the mailbox to be ready
+            print(color(f"\n→ New temporary email: {self.address}", fg="green"))
             time.sleep(1)
             return True
         return False
@@ -224,9 +217,9 @@ class MailoSession:
         new_count = sum(1 for m in self.messages if m.get("mail_id", m.get("id")) not in old_ids)
         if not silent and new_count > 0:
             plural = "s" if new_count > 1 else ""
-            print(color(f"\n{new_count} new message{plural} received!", fg="green"))
+            print(color(f"\n→ {new_count} new message{plural} received!", fg="green"))
         elif not silent and new_count == 0:
-            print(color("No new messages.", dim=True))
+            print(color("→ No new messages.", dim=True))
         return new_count
 
     def show_inbox(self) -> None:
@@ -261,14 +254,14 @@ class MailoSession:
         if not self.is_active():
             print(color("No active email address. Use option 1 first.", fg="red"))
             return
-        print(color(f"\nAuto-refresh mode active (every {interval} seconds)", fg="cyan"))
-        print(color("Press Ctrl+C to stop watching.\n", dim=True))
+        print(color(f"\n→ Auto-refresh mode active (every {interval} seconds)", fg="cyan"))
+        print(color("  Press Ctrl+C to stop watching.\n", dim=True))
         try:
             while True:
                 self.refresh(silent=False)
                 time.sleep(interval)
         except KeyboardInterrupt:
-            print(color("\nStopped auto-refresh.", fg="yellow"))
+            print(color("\n→ Stopped auto-refresh.", fg="yellow"))
 
     def copy_address(self) -> None:
         if not self.is_active():
@@ -279,23 +272,22 @@ class MailoSession:
             return
         try:
             pyperclip.copy(self.address)
-            print(color(f"Copied '{self.address}' to clipboard!", fg="green"))
+            print(color(f"→ Copied '{self.address}' to clipboard!", fg="green"))
         except Exception as e:
             print(color(f"Failed to copy: {e}", fg="red"))
 
     def debug_api(self) -> None:
-        """Print raw API response for get_email_list."""
         if not self.is_active():
             print(color("No active session.", fg="red"))
             return
         params = {"action": "get_email_list", "sid_token": self.sid, "offset": "0"}
         url = f"{API_BASE}?{urllib.parse.urlencode(params)}"
-        print(color(f"\nDebug: Fetching {url}", fg="cyan"))
+        print(color(f"\n→ Debug: Fetching {url}", fg="cyan"))
         try:
             req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
             with urllib.request.urlopen(req, timeout=15) as resp:
                 data = resp.read().decode("utf-8")
-                print(color("Raw JSON response:", fg="yellow"))
+                print(color("→ Raw JSON response:", fg="yellow"))
                 print(json.dumps(json.loads(data), indent=2))
         except Exception as e:
             print(color(f"Debug error: {e}", fg="red"))
