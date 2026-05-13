@@ -91,7 +91,7 @@ def html_to_text(html: str) -> str:
 def print_banner() -> None:
     banner = r"""
 ╔════════════════════════════════════════════════════════╗
-║               M   A   I   L   O                        ║
+║                   M   A   I   L   O                    ║
 ║           Temporary Email Client for Terminal          ║
 ║                Powered by Guerrilla Mail               ║
 ║             made by @govsmail on Telegram              ║
