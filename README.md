@@ -191,7 +191,6 @@ After starting Mailo, you will see a modern banner and an arrow‑style menu:
 │  ➤ 4  | Auto-refresh (10s)                    │
 │  ➤ 5  | Copy address to clipboard             │
 │  ➤ 6  | Help                                  │
-│  ➤ d  | Debug API (raw response)              │
 │  ➤ 99 | Exit                                  │
 └─────────────────────────────────────────────────┘
 
