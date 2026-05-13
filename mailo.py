@@ -46,37 +46,42 @@ def color(text: str, fg: str = "", bg: str = "", bold: bool = False, dim: bool =
     codes.append(Style.RESET)
     return "".join(codes)
 
-API_BASE = "https://www.1secmail.com/api/v1/"
+API_BASE = "https://api.guerrillamail.com/ajax.php"
 USER_AGENT = "mailo-terminal/1.0"
 
 def api_request(params: Dict[str, str]) -> Optional[Any]:
+    params["f"] = params.pop("action", "get_email_address")
     url = f"{API_BASE}?{urllib.parse.urlencode(params)}"
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = resp.read().decode("utf-8")
             return json.loads(data) if data else None
-    except Exception:
+    except Exception as e:
+        print(color(f"API error: {e}", fg="red"))
         return None
 
-def generate_email() -> Optional[Tuple[str, str, str]]:
-    params = {"action": "genRandomMailbox"}
+def generate_email() -> Optional[Tuple[str, str, str, str]]:
+    params = {"action": "get_email_address"}
     result = api_request(params)
-    if result and isinstance(result, list) and len(result) > 0:
-        full = result[0]
-        if "@" in full:
-            login, domain = full.split("@", 1)
-            return login, domain, full
-    print(color("Failed to generate email address. Check your internet connection.", fg="red"))
+    if result and isinstance(result, dict):
+        email = result.get("email_addr")
+        sid = result.get("sid_token")
+        if email and sid:
+            login, domain = email.split("@", 1)
+            return login, domain, email, sid
+    print(color("Failed to generate email address.", fg="red"))
     return None
 
-def fetch_messages(login: str, domain: str) -> List[Dict]:
-    params = {"action": "getMessages", "login": login, "domain": domain}
+def fetch_messages(sid: str) -> List[Dict]:
+    params = {"action": "get_email_list", "sid_token": sid}
     result = api_request(params)
-    return result if isinstance(result, list) else []
+    if result and isinstance(result, dict):
+        return result.get("list", [])
+    return []
 
-def fetch_message(login: str, domain: str, msg_id: int) -> Optional[Dict]:
-    params = {"action": "readMessage", "login": login, "domain": domain, "id": str(msg_id)}
+def fetch_message(sid: str, email_id: int) -> Optional[Dict]:
+    params = {"action": "fetch_email", "sid_token": sid, "email_id": str(email_id)}
     result = api_request(params)
     return result if isinstance(result, dict) else None
 
@@ -107,7 +112,9 @@ def print_banner() -> None:
 ║   ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝╚══════╝ ╚═════╝                    ║
 ║                                                              ║
 ║              Temporary Email Client for Terminal            ║
-║                   Powered by 1secmail                       ║
+║                  Powered by Guerrilla Mail                  ║
+║                                                              ║
+║               made by @govsmail on Telegram                 ║
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝
     """
@@ -115,17 +122,17 @@ def print_banner() -> None:
 
 def print_help() -> None:
     help_text = f"""
-{color('┌─────────────────────────────────────────────────────────────────────┐', fg='cyan')}
-{color('│                           MAILO COMMANDS                            │', fg='cyan', bold=True)}
-{color('├─────────────────────────────────────────────────────────────────────┤', fg='cyan')}
-{color('│  1  | Generate a new temporary email address                        │', fg='green')}
-{color('│  2  | View inbox                                                    │', fg='green')}
-{color('│  3  | Read an email (by number)                                     │', fg='green')}
-{color('│  4  | Auto-refresh inbox every 10 seconds                           │', fg='green')}
-{color('│  5  | Copy current email address to clipboard                       │', fg='green')}
-{color('│  6  | Display this help menu                                        │', fg='green')}
-{color('│  99 | Exit                                                          │', fg='green')}
-{color('└─────────────────────────────────────────────────────────────────────┘', fg='cyan')}
+{color('═══════════════════════════════════════════════════════════════', fg='cyan')}
+{color('                        MAILO COMMANDS                         ', fg='cyan', bold=True)}
+{color('═══════════════════════════════════════════════════════════════', fg='cyan')}
+{color('  1) Generate a new temporary email address', fg='green')}
+{color('  2) View inbox', fg='green')}
+{color('  3) Read an email (by number)', fg='green')}
+{color('  4) Auto-refresh inbox every 10 seconds', fg='green')}
+{color('  5) Copy current email address to clipboard', fg='green')}
+{color('  6) Display this help menu', fg='green')}
+{color(' 99) Exit', fg='green')}
+{color('═══════════════════════════════════════════════════════════════', fg='cyan')}
     """
     print(help_text)
 
@@ -136,10 +143,10 @@ def print_inbox_table(messages: List[Dict]) -> None:
 
     rows = []
     for idx, msg in enumerate(messages, 1):
-        msg_id = msg.get("id", "?")
-        from_addr = msg.get("from", "Unknown")[:35]
-        subject = (msg.get("subject", "(No subject)") or "(No subject)")[:50]
-        date = msg.get("date", "Unknown")[:19]
+        msg_id = msg.get("mail_id", msg.get("id", "?"))
+        from_addr = msg.get("mail_from", msg.get("from", "Unknown"))[:35]
+        subject = (msg.get("mail_subject", msg.get("subject", "(No subject)")) or "(No subject)")[:50]
+        date = msg.get("mail_date", msg.get("date", "Unknown"))[:19]
         rows.append((idx, msg_id, from_addr, subject, date))
 
     idx_w = max(len(str(r[0])) for r in rows)
@@ -161,12 +168,12 @@ def print_inbox_table(messages: List[Dict]) -> None:
     print(color(f"Total: {len(messages)} message(s)", dim=True))
 
 def print_email(message: Dict[str, Any]) -> None:
-    subject = message.get("subject", "(No subject)")
-    from_addr = message.get("from", "Unknown")
-    date = message.get("date", "Unknown")
-    body = message.get("textBody", "")
+    subject = message.get("mail_subject", message.get("subject", "(No subject)"))
+    from_addr = message.get("mail_from", message.get("from", "Unknown"))
+    date = message.get("mail_date", message.get("date", "Unknown"))
+    body = message.get("mail_body", message.get("body", ""))
     if not body:
-        body = message.get("htmlBody", "")
+        body = message.get("mail_html", message.get("html", ""))
         body = html_to_text(body)
 
     print(color("\n┌─────────────────────────────────────────────────────────────────────┐", fg="magenta"))
@@ -190,15 +197,16 @@ class MailoSession:
         self.login: Optional[str] = None
         self.domain: Optional[str] = None
         self.address: Optional[str] = None
+        self.sid: Optional[str] = None
         self.messages: List[Dict] = []
 
     def is_active(self) -> bool:
-        return all([self.login, self.domain, self.address])
+        return all([self.login, self.domain, self.address, self.sid])
 
     def new_address(self) -> bool:
         result = generate_email()
         if result:
-            self.login, self.domain, self.address = result
+            self.login, self.domain, self.address, self.sid = result
             self.messages = []
             print(color(f"\nNew temporary email: {self.address}", fg="green"))
             return True
@@ -207,12 +215,12 @@ class MailoSession:
     def refresh(self, silent: bool = False) -> int:
         if not self.is_active():
             return 0
-        new_msgs = fetch_messages(self.login, self.domain)
+        new_msgs = fetch_messages(self.sid)
         if new_msgs is None:
             return 0
-        old_ids = {m.get("id") for m in self.messages if m.get("id")}
+        old_ids = {m.get("mail_id", m.get("id")) for m in self.messages}
         self.messages = new_msgs
-        new_count = sum(1 for m in self.messages if m.get("id") not in old_ids)
+        new_count = sum(1 for m in self.messages if m.get("mail_id", m.get("id")) not in old_ids)
         if not silent and new_count > 0:
             plural = "s" if new_count > 1 else ""
             print(color(f"\n{new_count} new message{plural} received!", fg="green"))
@@ -238,11 +246,11 @@ class MailoSession:
             print(color(f"Invalid number. Choose 1-{len(self.messages)}.", fg="red"))
             return
         msg = self.messages[num - 1]
-        msg_id = msg.get("id")
+        msg_id = msg.get("mail_id", msg.get("id"))
         if not msg_id:
             print(color("Invalid message data.", fg="red"))
             return
-        full = fetch_message(self.login, self.domain, msg_id)
+        full = fetch_message(self.sid, msg_id)
         if full:
             print_email(full)
         else:
@@ -280,7 +288,7 @@ def main():
     session = MailoSession()
 
     if not session.new_address():
-        print(color("Cannot connect to 1secmail API. Please check your network.", fg="red"))
+        print(color("Cannot connect to Guerrilla Mail API. Please check your network.", fg="red"))
         sys.exit(1)
 
     print_help()
