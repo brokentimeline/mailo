@@ -178,15 +178,15 @@ After starting Mailo, you will see a banner and a menu:
 ```
 
 ╔════════════════════════════════════════════════════════════════╗
-║                         M A I L O   M E N U                     ║
+║                         M A I L O   M E N U                    ║
 ╠════════════════════════════════════════════════════════════════╣
-║  ➤  1   |  Generate a new temporary email address             ║
-║  ➤  2   |  View inbox (full list)                             ║
-║  ➤  3   |  Read an email (by number)                          ║
-║  ➤  4   |  Auto-refresh inbox (every 10 seconds)              ║
-║  ➤  5   |  Copy current address to clipboard                  ║
-║  ➤  6   |  Show inbox summary (total / new)                   ║
-║  ➤  99  |  Exit                                               ║
+║  ➤  1   |  Generate a new temporary email address              ║
+║  ➤  2   |  View inbox (full list)                              ║
+║  ➤  3   |  Read an email (by number)                           ║
+║  ➤  4   |  Auto-refresh inbox (every 10 seconds)               ║
+║  ➤  5   |  Copy current address to clipboard                   ║
+║  ➤  6   |  Show inbox summary (total / new)                    ║
+║  ➤  99  |  Exit                                                ║
 ╚════════════════════════════════════════════════════════════════╝
 
 ```
