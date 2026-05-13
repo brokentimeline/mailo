@@ -88,10 +88,6 @@ def html_to_text(html: str) -> str:
     html = re.sub(r"\n\s*\n", "\n\n", html)
     return html.strip()
 
-def clear_screen() -> None:
-    import os
-    os.system("cls" if os.name == "nt" else "clear")
-
 def print_banner() -> None:
     banner = r"""
 ╔════════════════════════════════════════════════════════╗
@@ -104,20 +100,20 @@ def print_banner() -> None:
     print(color(banner, fg="magenta", bold=True))
 
 def print_menu() -> None:
-    menu = f"""
-{color('╔════════════════════════════════════════════════════════════════╗', fg='cyan')}
-{color('║                         M A I L O   M E N U                     ║', fg='cyan', bold=True)}
-{color('╠════════════════════════════════════════════════════════════════╣', fg='cyan')}
-{color('║  ➤  1   |  Generate a new temporary email address             ║', fg='green')}
-{color('║  ➤  2   |  View inbox (full list)                             ║', fg='green')}
-{color('║  ➤  3   |  Read an email (by number)                          ║', fg='green')}
-{color('║  ➤  4   |  Auto-refresh inbox (every 10 seconds)              ║', fg='green')}
-{color('║  ➤  5   |  Copy current address to clipboard                  ║', fg='green')}
-{color('║  ➤  6   |  Show inbox summary (total / new)                   ║', fg='green')}
-{color('║  ➤  99  |  Exit                                               ║', fg='green')}
-{color('╚════════════════════════════════════════════════════════════════╝', fg='cyan')}
+    menu = r"""
+╔════════════════════════════════════════════════════════════════╗
+║                         M A I L O   M E N U                     ║
+╠════════════════════════════════════════════════════════════════╣
+║  ➤  1   |  Generate a new temporary email address             ║
+║  ➤  2   |  View inbox (full list)                             ║
+║  ➤  3   |  Read an email (by number)                          ║
+║  ➤  4   |  Auto-refresh inbox (every 10 seconds)              ║
+║  ➤  5   |  Copy current address to clipboard                  ║
+║  ➤  6   |  Show inbox summary (total / new)                   ║
+║  ➤  99  |  Exit                                               ║
+╚════════════════════════════════════════════════════════════════╝
 """
-    print(menu)
+    print(color(menu, fg="cyan"))
 
 def print_inbox_table(messages: List[Dict]) -> None:
     if not messages:
@@ -230,8 +226,6 @@ class MailoSession:
         if not self.is_active():
             print(color("No active email address. Use option 1 to create one.", fg="red"))
             return
-        clear_screen()
-        print_banner()
         self.refresh(silent=True)
         print_inbox_table(self.messages)
 
@@ -252,8 +246,6 @@ class MailoSession:
             return
         full = fetch_message(self.sid, msg_id)
         if full:
-            clear_screen()
-            print_banner()
             print_email(full)
         else:
             print(color("Failed to retrieve message content.", fg="red"))
@@ -262,8 +254,6 @@ class MailoSession:
         if not self.is_active():
             print(color("No active email address. Use option 1 to create one.", fg="red"))
             return
-        clear_screen()
-        print_banner()
         old_ids = self.last_message_ids.copy()
         new_count = self.refresh(silent=True)
         print_summary(len(self.messages), new_count)
@@ -295,16 +285,16 @@ class MailoSession:
             print(color(f"Failed to copy: {e}", fg="red"))
 
 def main():
-    clear_screen()
+    print_banner()
     session = MailoSession()
 
     if not session.new_address():
         print(color("Cannot connect to Guerrilla Mail API. Please check your network.", fg="red"))
         sys.exit(1)
 
+    print_menu()
+
     while True:
-        print_banner()
-        print_menu()
         try:
             prompt = color(f"\n  [{session.address}] > ", fg="green")
             choice = input(prompt).strip().lower()
@@ -320,7 +310,6 @@ def main():
 
         if choice == "1":
             session.new_address()
-            clear_screen()
         elif choice == "2":
             session.show_inbox()
         elif choice == "3":
@@ -334,7 +323,6 @@ def main():
                 print(color("  Invalid input. Please enter a number.", fg="red"))
         elif choice == "4":
             session.auto_watch()
-            clear_screen()
         elif choice == "5":
             session.copy_address()
         elif choice == "6":
