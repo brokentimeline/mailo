@@ -38,7 +38,7 @@ def color(text: str, fg: str = "", bold: bool = False, dim: bool = False) -> str
     return "".join(codes)
 
 API_BASE = "https://api.guerrillamail.com/ajax.php"
-USER_AGENT = "mailo-terminal/2.0"
+USER_AGENT = "mailo-terminal/3.0"
 
 def api_request(params: Dict[str, str]) -> Optional[Any]:
     if "action" in params:
@@ -94,42 +94,42 @@ def clear_screen() -> None:
 
 def print_banner() -> None:
     banner = r"""
-╔══════════════════════════════════════╗
-║              M   A   I   L   O       ║
-║     Temporary Email Client           ║
-║     Powered by Guerrilla Mail        ║
-║     made by @govsmail on Telegram    ║
-╚══════════════════════════════════════╝
+╔════════════════════════════════════════════════════════╗
+║               M   A   I   L   O                        ║
+║           Temporary Email Client for Terminal          ║
+║                Powered by Guerrilla Mail               ║
+║             made by @govsmail on Telegram              ║
+╚════════════════════════════════════════════════════════╝
 """
     print(color(banner, fg="magenta", bold=True))
 
-def print_help() -> None:
-    help_text = f"""
-{color('╔═════════════════════════════════════════════════╗', fg='cyan')}
-{color('║                    M A I L O                    ║', fg='cyan', bold=True)}
-{color('╠═════════════════════════════════════════════════╣', fg='cyan')}
-{color('║  ➤ 1    New email address                      ║', fg='green')}
-{color('║  ➤ 2    View inbox                             ║', fg='green')}
-{color('║  ➤ 3    Read email (by number)                 ║', fg='green')}
-{color('║  ➤ 4    Auto-refresh (every 10 seconds)        ║', fg='green')}
-{color('║  ➤ 5    Copy address to clipboard              ║', fg='green')}
-{color('║  ➤ 6    Show this help menu                    ║', fg='green')}
-{color('║  ➤ 99   Exit                                   ║', fg='green')}
-{color('╚═════════════════════════════════════════════════╝', fg='cyan')}
+def print_menu() -> None:
+    menu = f"""
+{color('╔════════════════════════════════════════════════════════════════╗', fg='cyan')}
+{color('║                         M A I L O   M E N U                     ║', fg='cyan', bold=True)}
+{color('╠════════════════════════════════════════════════════════════════╣', fg='cyan')}
+{color('║  ➤  1   |  Generate a new temporary email address             ║', fg='green')}
+{color('║  ➤  2   |  View inbox (full list)                             ║', fg='green')}
+{color('║  ➤  3   |  Read an email (by number)                          ║', fg='green')}
+{color('║  ➤  4   |  Auto-refresh inbox (every 10 seconds)              ║', fg='green')}
+{color('║  ➤  5   |  Copy current address to clipboard                  ║', fg='green')}
+{color('║  ➤  6   |  Show inbox summary (total / new)                   ║', fg='green')}
+{color('║  ➤  99  |  Exit                                               ║', fg='green')}
+{color('╚════════════════════════════════════════════════════════════════╝', fg='cyan')}
 """
-    print(help_text)
+    print(menu)
 
 def print_inbox_table(messages: List[Dict]) -> None:
     if not messages:
-        print(color("\nInbox is empty. Waiting for emails...", fg="yellow"))
+        print(color("\n  Inbox is empty. Waiting for emails...", fg="yellow"))
         return
 
     rows = []
     for idx, msg in enumerate(messages, 1):
         msg_id = msg.get("mail_id", msg.get("id", "?"))
-        from_addr = msg.get("mail_from", msg.get("from", "Unknown"))[:30]
-        subject = (msg.get("mail_subject", msg.get("subject", "(No subject)")) or "(No subject)")[:40]
-        date = msg.get("mail_date", msg.get("date", "Unknown"))[:16]
+        from_addr = msg.get("mail_from", msg.get("from", "Unknown"))[:35]
+        subject = (msg.get("mail_subject", msg.get("subject", "(No subject)")) or "(No subject)")[:45]
+        date = msg.get("mail_date", msg.get("date", "Unknown"))[:19]
         rows.append((idx, msg_id, from_addr, subject, date))
 
     idx_w = max(len(str(r[0])) for r in rows)
@@ -149,7 +149,7 @@ def print_inbox_table(messages: List[Dict]) -> None:
         print(line)
 
     print(color("└" + "─" * total_w + "┘", fg="cyan"))
-    print(color(f"Total: {len(messages)} message(s)", dim=True))
+    print(color(f"\n  Total messages: {len(messages)}", dim=True))
 
 def print_email(message: Dict[str, Any]) -> None:
     subject = message.get("mail_subject", message.get("subject", "(No subject)"))
@@ -161,20 +161,28 @@ def print_email(message: Dict[str, Any]) -> None:
         body = html_to_text(body)
 
     print(color("\n┌─────────────────────────────────────────────────────────────────┐", fg="magenta"))
-    print(color(f"│ Subject: {subject[:60]:<60}", bold=True))
-    print(color(f"│ From:    {from_addr[:60]}"))
-    print(color(f"│ Date:    {date[:60]}", dim=True))
+    print(color(f"│  Subject:  {subject[:60]:<60}", bold=True))
+    print(color(f"│  From:     {from_addr[:60]}"))
+    print(color(f"│  Date:     {date[:60]}", dim=True))
     print(color("├─────────────────────────────────────────────────────────────────┤", fg="magenta"))
 
     if body:
-        print(color("│ Content:"))
+        print(color("│  Content:                                                      │", bold=True))
         for line in body.splitlines():
             for chunk in [line[i:i+78] for i in range(0, len(line), 78)]:
-                print(f"│ {chunk}")
+                print(f"│  {chunk}")
     else:
-        print(color("│ (No text content in this email)", dim=True))
+        print(color("│  (No text content in this email)                               │", dim=True))
 
     print(color("└─────────────────────────────────────────────────────────────────┘", fg="magenta"))
+
+def print_summary(total: int, new_count: int) -> None:
+    print(color("\n╔════════════════════════════════════════════════════════════╗", fg='cyan'))
+    print(color("║                     INBOX SUMMARY                          ║", fg='cyan', bold=True))
+    print(color("╠════════════════════════════════════════════════════════════╣", fg='cyan'))
+    print(color(f"║  Total messages:  {total:<38} ║", fg='green'))
+    print(color(f"║  New messages:    {new_count:<38} ║", fg='yellow'))
+    print(color("╚════════════════════════════════════════════════════════════╝", fg='cyan'))
 
 class MailoSession:
     def __init__(self):
@@ -183,6 +191,7 @@ class MailoSession:
         self.address: Optional[str] = None
         self.sid: Optional[str] = None
         self.messages: List[Dict] = []
+        self.last_message_ids: set = set()
 
     def is_active(self) -> bool:
         return all([self.login, self.domain, self.address, self.sid])
@@ -192,7 +201,8 @@ class MailoSession:
         if result:
             self.login, self.domain, self.address, self.sid = result
             self.messages = []
-            print(color(f"\n→ New temporary email: {self.address}", fg="green"))
+            self.last_message_ids = set()
+            print(color(f"\n  New temporary email: {self.address}", fg="green"))
             time.sleep(1)
             return True
         return False
@@ -203,22 +213,25 @@ class MailoSession:
         new_msgs = fetch_messages(self.sid)
         if new_msgs is None:
             if not silent:
-                print(color("Failed to fetch inbox. Check your network.", fg="red"))
+                print(color("  Failed to fetch inbox. Check your network.", fg="red"))
             return 0
-        old_ids = {m.get("mail_id", m.get("id")) for m in self.messages}
+        old_ids = self.last_message_ids.copy()
         self.messages = new_msgs
-        new_count = sum(1 for m in self.messages if m.get("mail_id", m.get("id")) not in old_ids)
+        self.last_message_ids = {m.get("mail_id", m.get("id")) for m in self.messages}
+        new_count = len(self.last_message_ids - old_ids)
         if not silent and new_count > 0:
             plural = "s" if new_count > 1 else ""
-            print(color(f"\n→ {new_count} new message{plural} received!", fg="green"))
+            print(color(f"\n  {new_count} new message{plural} received!", fg="green"))
         elif not silent and new_count == 0:
-            print(color("→ No new messages.", dim=True))
+            print(color("  No new messages.", dim=True))
         return new_count
 
     def show_inbox(self) -> None:
         if not self.is_active():
             print(color("No active email address. Use option 1 to create one.", fg="red"))
             return
+        clear_screen()
+        print_banner()
         self.refresh(silent=True)
         print_inbox_table(self.messages)
 
@@ -239,22 +252,34 @@ class MailoSession:
             return
         full = fetch_message(self.sid, msg_id)
         if full:
+            clear_screen()
+            print_banner()
             print_email(full)
         else:
             print(color("Failed to retrieve message content.", fg="red"))
+
+    def show_summary(self) -> None:
+        if not self.is_active():
+            print(color("No active email address. Use option 1 to create one.", fg="red"))
+            return
+        clear_screen()
+        print_banner()
+        old_ids = self.last_message_ids.copy()
+        new_count = self.refresh(silent=True)
+        print_summary(len(self.messages), new_count)
 
     def auto_watch(self, interval: int = 10) -> None:
         if not self.is_active():
             print(color("No active email address. Use option 1 first.", fg="red"))
             return
-        print(color(f"\n→ Auto-refresh mode active (every {interval} seconds)", fg="cyan"))
+        print(color(f"\n  Auto-refresh mode active (every {interval} seconds)", fg="cyan"))
         print(color("  Press Ctrl+C to stop watching.\n", dim=True))
         try:
             while True:
                 self.refresh(silent=False)
                 time.sleep(interval)
         except KeyboardInterrupt:
-            print(color("\n→ Stopped auto-refresh.", fg="yellow"))
+            print(color("\n  Stopped auto-refresh.", fg="yellow"))
 
     def copy_address(self) -> None:
         if not self.is_active():
@@ -265,30 +290,29 @@ class MailoSession:
             return
         try:
             pyperclip.copy(self.address)
-            print(color(f"→ Copied '{self.address}' to clipboard!", fg="green"))
+            print(color(f"  Copied '{self.address}' to clipboard!", fg="green"))
         except Exception as e:
             print(color(f"Failed to copy: {e}", fg="red"))
 
 def main():
     clear_screen()
-    print_banner()
     session = MailoSession()
 
     if not session.new_address():
         print(color("Cannot connect to Guerrilla Mail API. Please check your network.", fg="red"))
         sys.exit(1)
 
-    print_help()
-
     while True:
+        print_banner()
+        print_menu()
         try:
-            prompt = color(f"\n[{session.address}] > ", fg="green")
+            prompt = color(f"\n  [{session.address}] > ", fg="green")
             choice = input(prompt).strip().lower()
         except KeyboardInterrupt:
-            print(color("\n\nGoodbye!", fg="yellow"))
+            print(color("\n\n  Goodbye!", fg="yellow"))
             break
         except EOFError:
-            print(color("\n\nGoodbye!", fg="yellow"))
+            print(color("\n\n  Goodbye!", fg="yellow"))
             break
 
         if not choice:
@@ -296,28 +320,30 @@ def main():
 
         if choice == "1":
             session.new_address()
+            clear_screen()
         elif choice == "2":
             session.show_inbox()
         elif choice == "3":
             if not session.messages:
-                print(color("Inbox is empty. Nothing to read.", fg="yellow"))
+                print(color("  Inbox is empty. Nothing to read.", fg="yellow"))
                 continue
             try:
-                num = int(input(color("Enter email number: ", fg="cyan")))
+                num = int(input(color("  Enter email number: ", fg="cyan")))
                 session.read_by_number(num)
             except ValueError:
-                print(color("Invalid input. Please enter a number.", fg="red"))
+                print(color("  Invalid input. Please enter a number.", fg="red"))
         elif choice == "4":
             session.auto_watch()
+            clear_screen()
         elif choice == "5":
             session.copy_address()
         elif choice == "6":
-            print_help()
+            session.show_summary()
         elif choice in ["99", "q", "quit", "exit"]:
-            print(color("Goodbye!", fg="yellow"))
+            print(color("\n  Goodbye!", fg="yellow"))
             break
         else:
-            print(color("Unknown command. Type 6 for help.", fg="red"))
+            print(color("  Unknown command.", fg="red"))
 
 if __name__ == "__main__":
     main()
