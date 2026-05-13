@@ -11,7 +11,6 @@
 - Auto-refresh inbox every few seconds
 - Copy email address to clipboard (optional)
 - Show inbox summary (total messages / new messages)
-- Automatic screen clearing before each operation
 - Works on Linux, Windows (Python), Termux (Android), and iSH (iOS)
 
 ## Requirements
