@@ -15,6 +15,7 @@ Made by [@govsmail](https://t.me/govsmail) on Telegram.
 - Read full email content (plain text and HTML converted)
 - Auto-refresh inbox every few seconds
 - Copy email address to clipboard (optional)
+- Debug mode to inspect raw API responses
 - Works on Linux, Windows (Python), Termux (Android), and iSH (iOS)
 
 ## Requirements
@@ -177,25 +178,26 @@ python mailo.py
 
 ## Usage
 
-After starting Mailo, you will see a banner and a menu:
+After starting Mailo, you will see a modern banner and an arrow‑style menu:
 
 ```
 
 ┌─────────────────────────────────────────────────┐
-│                 MAILO COMMANDS                  │
+│                    MAILO                       │
 ├─────────────────────────────────────────────────┤
-│  1) New email address                          │
-│  2) View inbox                                 │
-│  3) Read email (by number)                     │
-│  4) Auto-refresh (10s)                         │
-│  5) Copy address to clipboard                  │
-│  6) Help                                       │
-│ 99) Exit                                       │
+│  ➤ 1  | New email address                     │
+│  ➤ 2  | View inbox                            │
+│  ➤ 3  | Read email (by number)                │
+│  ➤ 4  | Auto-refresh (10s)                    │
+│  ➤ 5  | Copy address to clipboard             │
+│  ➤ 6  | Help                                  │
+│  ➤ d  | Debug API (raw response)              │
+│  ➤ 99 | Exit                                  │
 └─────────────────────────────────────────────────┘
 
 ```
 
-Type the number of the action you want and press Enter.
+Type the number or letter and press Enter.
 
 - **1** – Generates a new temporary email address. The old address will no longer work.
 - **2** – Shows the inbox with a list of received emails (ID, sender, subject, date).
@@ -203,6 +205,7 @@ Type the number of the action you want and press Enter.
 - **4** – Automatically refreshes the inbox every 10 seconds. Press Ctrl+C to stop.
 - **5** – Copies the current email address to your clipboard (requires `pyperclip`).
 - **6** – Displays the help menu again.
+- **d** – Debug mode: prints the raw JSON response from the API. Useful to see if emails are arriving when the inbox appears empty.
 - **99** – Exits the program.
 
 ## Troubleshooting
@@ -215,6 +218,11 @@ Install CA certificates:
 ### "Failed to generate email address"
 - Check your internet connection (`ping 1.1.1.1`)
 - Guerrilla Mail API may be temporarily down – wait a few minutes and retry
+
+### Inbox stays empty even after sending an email
+- Wait 5–10 seconds – email delivery is not instant.
+- Use the **debug command** (`d`) to see the raw API response. If the response shows `"list": []`, the email may have been blocked or the address is invalid. Try generating a new address (option 1) and send the email again.
+- Some services block disposable email domains – try a different recipient service.
 
 ### Clipboard not working
 - Install `pyperclip` (`pip install pyperclip`) – if it still fails, your terminal environment may not support clipboard. The rest of Mailo works without it.
@@ -230,5 +238,3 @@ Install CA certificates:
 ## License
 
 MIT License – free to use, modify, and distribute.
-
-
