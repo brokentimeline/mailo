@@ -3,7 +3,10 @@
 Mailo is a lightweight, disposable email client that runs entirely in your terminal. It generates a temporary email address and allows you to receive, read, and manage emails without any registration.
 
 Powered by the [Guerrilla Mail](https://www.guerrillamail.com/) API.
-Made by @govsmail on Telegram.
+
+Made by [@govsmail](https://t.me/govsmail) on Telegram.
+
+[Click here for the Mailo Telegram Channel](https://t.me/mailotemp)
 
 ## Features
 
