@@ -17,7 +17,6 @@ class Style:
     RESET = "\033[0m"
     BOLD = "\033[1m"
     DIM = "\033[2m"
-    ITALIC = "\033[3m"
     RED = "\033[31m"
     GREEN = "\033[32m"
     YELLOW = "\033[33m"
@@ -32,7 +31,7 @@ class Style:
     BG_MAGENTA = "\033[45m"
     BG_CYAN = "\033[46m"
 
-def color(text: str, fg: str = "", bg: str = "", bold: bool = False, dim: bool = False) -> str:
+def color(text: str, fg: str = "", bold: bool = False, dim: bool = False) -> str:
     codes = []
     if bold:
         codes.append(Style.BOLD)
@@ -40,8 +39,6 @@ def color(text: str, fg: str = "", bg: str = "", bold: bool = False, dim: bool =
         codes.append(Style.DIM)
     if fg:
         codes.append(getattr(Style, fg.upper(), ""))
-    if bg:
-        codes.append(getattr(Style, f"BG_{bg.upper()}", ""))
     codes.append(text)
     codes.append(Style.RESET)
     return "".join(codes)
@@ -102,38 +99,35 @@ def clear_screen() -> None:
 
 def print_banner() -> None:
     banner = r"""
-╔══════════════════════════════════════════════════════════════╗
-║                                                              ║
-║   ███╗   ███╗ █████╗ ██╗██╗      ██████╗                    ║
-║   ████╗ ████║██╔══██╗██║██║     ██╔═══██╗                   ║
-║   ██╔████╔██║███████║██║██║     ██║   ██║                   ║
-║   ██║╚██╔╝██║██╔══██║██║██║     ██║   ██║                   ║
-║   ██║ ╚═╝ ██║██║  ██║██║███████╗╚██████╔╝                   ║
-║   ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝╚══════╝ ╚═════╝                    ║
-║                                                              ║
-║              Temporary Email Client for Terminal            ║
-║                  Powered by Guerrilla Mail                  ║
-║                                                              ║
-║               made by @govsmail on Telegram                 ║
-║                                                              ║
-╚══════════════════════════════════════════════════════════════╝
-    """
+╔════════════════════════════════════════════════════════╗
+║  ███╗   ███╗ █████╗ ██╗██╗      ██████╗               ║
+║  ████╗ ████║██╔══██╗██║██║     ██╔═══██╗              ║
+║  ██╔████╔██║███████║██║██║     ██║   ██║              ║
+║  ██║╚██╔╝██║██╔══██║██║██║     ██║   ██║              ║
+║  ██║ ╚═╝ ██║██║  ██║██║███████╗╚██████╔╝              ║
+║  ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝╚══════╝ ╚═════╝               ║
+║                                                        ║
+║         Temporary Email Client for Terminal           ║
+║              Powered by Guerrilla Mail                ║
+║           made by @govsmail on Telegram               ║
+╚════════════════════════════════════════════════════════╝
+"""
     print(color(banner, fg="magenta"))
 
 def print_help() -> None:
     help_text = f"""
-{color('═══════════════════════════════════════════════════════════════', fg='cyan')}
-{color('                        MAILO COMMANDS                         ', fg='cyan', bold=True)}
-{color('═══════════════════════════════════════════════════════════════', fg='cyan')}
-{color('  1) Generate a new temporary email address', fg='green')}
-{color('  2) View inbox', fg='green')}
-{color('  3) Read an email (by number)', fg='green')}
-{color('  4) Auto-refresh inbox every 10 seconds', fg='green')}
-{color('  5) Copy current email address to clipboard', fg='green')}
-{color('  6) Display this help menu', fg='green')}
-{color(' 99) Exit', fg='green')}
-{color('═══════════════════════════════════════════════════════════════', fg='cyan')}
-    """
+{color('┌─────────────────────────────────────────────────┐', fg='cyan')}
+{color('│                 MAILO COMMANDS                  │', fg='cyan', bold=True)}
+{color('├─────────────────────────────────────────────────┤', fg='cyan')}
+{color('│  1) New email address                          │', fg='green')}
+{color('│  2) View inbox                                 │', fg='green')}
+{color('│  3) Read email (by number)                     │', fg='green')}
+{color('│  4) Auto-refresh (10s)                         │', fg='green')}
+{color('│  5) Copy address to clipboard                  │', fg='green')}
+{color('│  6) Help                                       │', fg='green')}
+{color('│ 99) Exit                                       │', fg='green')}
+{color('└─────────────────────────────────────────────────┘', fg='cyan')}
+"""
     print(help_text)
 
 def print_inbox_table(messages: List[Dict]) -> None:
@@ -144,9 +138,9 @@ def print_inbox_table(messages: List[Dict]) -> None:
     rows = []
     for idx, msg in enumerate(messages, 1):
         msg_id = msg.get("mail_id", msg.get("id", "?"))
-        from_addr = msg.get("mail_from", msg.get("from", "Unknown"))[:35]
-        subject = (msg.get("mail_subject", msg.get("subject", "(No subject)")) or "(No subject)")[:50]
-        date = msg.get("mail_date", msg.get("date", "Unknown"))[:19]
+        from_addr = msg.get("mail_from", msg.get("from", "Unknown"))[:30]
+        subject = (msg.get("mail_subject", msg.get("subject", "(No subject)")) or "(No subject)")[:40]
+        date = msg.get("mail_date", msg.get("date", "Unknown"))[:16]
         rows.append((idx, msg_id, from_addr, subject, date))
 
     idx_w = max(len(str(r[0])) for r in rows)
@@ -155,16 +149,17 @@ def print_inbox_table(messages: List[Dict]) -> None:
     subj_w = max(len(r[3]) for r in rows)
     date_w = max(len(r[4]) for r in rows)
 
-    header = f"{color('#', bold=True):<{idx_w}}  {color('ID', bold=True):<{id_w}}  {color('From', bold=True):<{from_w}}  {color('Subject', bold=True):<{subj_w}}  {color('Date', bold=True)}"
-    print(color("┌" + "─" * (idx_w + id_w + from_w + subj_w + date_w + 9) + "┐", fg="cyan"))
-    print(f"│ {header} │")
-    print(color("├" + "─" * (idx_w + id_w + from_w + subj_w + date_w + 9) + "┤", fg="cyan"))
+    total_w = idx_w + id_w + from_w + subj_w + date_w + 13
+    print(color("┌" + "─" * total_w + "┐", fg="cyan"))
+    header = f"│ {color('#', bold=True):<{idx_w}}  {color('ID', bold=True):<{id_w}}  {color('From', bold=True):<{from_w}}  {color('Subject', bold=True):<{subj_w}}  {color('Date', bold=True)} │"
+    print(header)
+    print(color("├" + "─" * total_w + "┤", fg="cyan"))
 
     for idx, msg_id, from_addr, subject, date in rows:
         line = f"│ {color(str(idx), fg='green'):<{idx_w}}  {str(msg_id):<{id_w}}  {from_addr:<{from_w}}  {subject:<{subj_w}}  {date:<{date_w}} │"
         print(line)
 
-    print(color("└" + "─" * (idx_w + id_w + from_w + subj_w + date_w + 9) + "┘", fg="cyan"))
+    print(color("└" + "─" * total_w + "┘", fg="cyan"))
     print(color(f"Total: {len(messages)} message(s)", dim=True))
 
 def print_email(message: Dict[str, Any]) -> None:
@@ -176,21 +171,21 @@ def print_email(message: Dict[str, Any]) -> None:
         body = message.get("mail_html", message.get("html", ""))
         body = html_to_text(body)
 
-    print(color("\n┌─────────────────────────────────────────────────────────────────────┐", fg="magenta"))
-    print(color(f"│  Subject: {subject[:60]:<60}", bold=True))
-    print(color(f"│  From:    {from_addr[:60]}"))
-    print(color(f"│  Date:    {date[:60]}", dim=True))
-    print(color("├─────────────────────────────────────────────────────────────────────┤", fg="magenta"))
+    print(color("\n┌─────────────────────────────────────────────────────────────────┐", fg="magenta"))
+    print(color(f"│ Subject: {subject[:60]:<60}", bold=True))
+    print(color(f"│ From:    {from_addr[:60]}"))
+    print(color(f"│ Date:    {date[:60]}", dim=True))
+    print(color("├─────────────────────────────────────────────────────────────────┤", fg="magenta"))
 
     if body:
-        print(color("│  Content:"))
+        print(color("│ Content:"))
         for line in body.splitlines():
-            for chunk in [line[i:i+80] for i in range(0, len(line), 80)]:
-                print(f"│  {chunk}")
+            for chunk in [line[i:i+78] for i in range(0, len(line), 78)]:
+                print(f"│ {chunk}")
     else:
-        print(color("│  (No text content in this email)", dim=True))
+        print(color("│ (No text content in this email)", dim=True))
 
-    print(color("└─────────────────────────────────────────────────────────────────────┘", fg="magenta"))
+    print(color("└─────────────────────────────────────────────────────────────────┘", fg="magenta"))
 
 class MailoSession:
     def __init__(self):
