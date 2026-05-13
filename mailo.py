@@ -47,7 +47,9 @@ API_BASE = "https://api.guerrillamail.com/ajax.php"
 USER_AGENT = "mailo-terminal/1.0"
 
 def api_request(params: Dict[str, str]) -> Optional[Any]:
-    params["f"] = params.pop("action", "get_email_address")
+    # Guerrilla Mail expects 'f' as the action parameter
+    if "action" in params:
+        params["f"] = params.pop("action")
     url = f"{API_BASE}?{urllib.parse.urlencode(params)}"
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     try:
@@ -71,7 +73,7 @@ def generate_email() -> Optional[Tuple[str, str, str, str]]:
     return None
 
 def fetch_messages(sid: str) -> List[Dict]:
-    params = {"action": "get_email_list", "sid_token": sid}
+    params = {"action": "get_email_list", "sid_token": sid, "offset": "0"}
     result = api_request(params)
     if result and isinstance(result, dict):
         return result.get("list", [])
@@ -105,8 +107,7 @@ def print_banner() -> None:
 ║  ██╔████╔██║███████║██║██║     ██║   ██║              ║
 ║  ██║╚██╔╝██║██╔══██║██║██║     ██║   ██║              ║
 ║  ██║ ╚═╝ ██║██║  ██║██║███████╗╚██████╔╝              ║
-║                                                       ║
-║                                                       ║
+║  ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝╚══════╝ ╚═════╝               ║
 ║         Temporary Email Client for Terminal           ║
 ║              Powered by Guerrilla Mail                ║
 ║           made by @govsmail on Telegram               ║
@@ -125,6 +126,7 @@ def print_help() -> None:
 {color('│  4) Auto-refresh (10s)                         │', fg='green')}
 {color('│  5) Copy address to clipboard                  │', fg='green')}
 {color('│  6) Help                                       │', fg='green')}
+{color('│  d) Debug (show raw API response)              │', fg='yellow')}
 {color('│ 99) Exit                                       │', fg='green')}
 {color('└─────────────────────────────────────────────────┘', fg='cyan')}
 """
@@ -204,6 +206,8 @@ class MailoSession:
             self.login, self.domain, self.address, self.sid = result
             self.messages = []
             print(color(f"\nNew temporary email: {self.address}", fg="green"))
+            # Wait a moment for the mailbox to be ready
+            time.sleep(1)
             return True
         return False
 
@@ -212,6 +216,8 @@ class MailoSession:
             return 0
         new_msgs = fetch_messages(self.sid)
         if new_msgs is None:
+            if not silent:
+                print(color("Failed to fetch inbox. Check your network.", fg="red"))
             return 0
         old_ids = {m.get("mail_id", m.get("id")) for m in self.messages}
         self.messages = new_msgs
@@ -277,6 +283,23 @@ class MailoSession:
         except Exception as e:
             print(color(f"Failed to copy: {e}", fg="red"))
 
+    def debug_api(self) -> None:
+        """Print raw API response for get_email_list."""
+        if not self.is_active():
+            print(color("No active session.", fg="red"))
+            return
+        params = {"action": "get_email_list", "sid_token": self.sid, "offset": "0"}
+        url = f"{API_BASE}?{urllib.parse.urlencode(params)}"
+        print(color(f"\nDebug: Fetching {url}", fg="cyan"))
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = resp.read().decode("utf-8")
+                print(color("Raw JSON response:", fg="yellow"))
+                print(json.dumps(json.loads(data), indent=2))
+        except Exception as e:
+            print(color(f"Debug error: {e}", fg="red"))
+
 def main():
     clear_screen()
     print_banner()
@@ -291,7 +314,7 @@ def main():
     while True:
         try:
             prompt = color(f"\n[{session.address}] > ", fg="green")
-            choice = input(prompt).strip()
+            choice = input(prompt).strip().lower()
         except KeyboardInterrupt:
             print(color("\n\nGoodbye!", fg="yellow"))
             break
@@ -321,6 +344,8 @@ def main():
             session.copy_address()
         elif choice == "6":
             print_help()
+        elif choice == "d":
+            session.debug_api()
         elif choice in ["99", "q", "quit", "exit"]:
             print(color("Goodbye!", fg="yellow"))
             break
