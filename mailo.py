@@ -94,40 +94,34 @@ def clear_screen() -> None:
 
 def print_banner() -> None:
     banner = r"""
-╔═══════════════════════════════════════════════════════════════╗
-║   ███╗   ███╗ █████╗ ██╗██╗      ██████╗                     ║
-║   ████╗ ████║██╔══██╗██║██║     ██╔═══██╗                    ║
-║   ██╔████╔██║███████║██║██║     ██║   ██║                    ║
-║   ██║╚██╔╝██║██╔══██║██║██║     ██║   ██║                    ║
-║   ██║ ╚═╝ ██║██║  ██║██║███████╗╚██████╔╝                    ║
-║   ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝╚══════╝ ╚═════╝                     ║
-║                                                               ║
-║           Temporary Email Client for Terminal                ║
-║                 Powered by Guerrilla Mail                    ║
-║              made by @govsmail on Telegram                   ║
-╚═══════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════╗
+║              M   A   I   L   O       ║
+║     Temporary Email Client           ║
+║     Powered by Guerrilla Mail        ║
+║     made by @govsmail on Telegram    ║
+╚══════════════════════════════════════╝
 """
     print(color(banner, fg="magenta", bold=True))
 
 def print_help() -> None:
     help_text = f"""
-{color('┌─────────────────────────────────────────────────┐', fg='blue')}
-{color('│                    MAILO                       │', fg='blue', bold=True)}
-{color('├─────────────────────────────────────────────────┤', fg='blue')}
-{color('│  ➤ 1  | New email address                     │', fg='green')}
-{color('│  ➤ 2  | View inbox                            │', fg='green')}
-{color('│  ➤ 3  | Read email (by number)                │', fg='green')}
-{color('│  ➤ 4  | Auto-refresh (10s)                    │', fg='green')}
-{color('│  ➤ 5  | Copy address to clipboard             │', fg='green')}
-{color('│  ➤ 6  | Help                                  │', fg='green')}
-{color('│  ➤ 99 | Exit                                  │', fg='green')}
-{color('└─────────────────────────────────────────────────┘', fg='blue')}
+{color('╔═════════════════════════════════════════════════╗', fg='cyan')}
+{color('║                    M A I L O                    ║', fg='cyan', bold=True)}
+{color('╠═════════════════════════════════════════════════╣', fg='cyan')}
+{color('║  ➤ 1    New email address                      ║', fg='green')}
+{color('║  ➤ 2    View inbox                             ║', fg='green')}
+{color('║  ➤ 3    Read email (by number)                 ║', fg='green')}
+{color('║  ➤ 4    Auto-refresh (every 10 seconds)        ║', fg='green')}
+{color('║  ➤ 5    Copy address to clipboard              ║', fg='green')}
+{color('║  ➤ 6    Show this help menu                    ║', fg='green')}
+{color('║  ➤ 99   Exit                                   ║', fg='green')}
+{color('╚═════════════════════════════════════════════════╝', fg='cyan')}
 """
     print(help_text)
 
 def print_inbox_table(messages: List[Dict]) -> None:
     if not messages:
-        print(color("\n📭 Inbox is empty. Waiting for emails...", fg="yellow"))
+        print(color("\nInbox is empty. Waiting for emails...", fg="yellow"))
         return
 
     rows = []
